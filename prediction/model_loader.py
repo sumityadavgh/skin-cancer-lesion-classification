@@ -1,15 +1,22 @@
 import os
-import tensorflow as tf
+import numpy as np
+from PIL import Image
 from django.conf import settings
+from ai_edge_litert.interpreter import Interpreter
 
 
 MODEL_PATH = os.path.join(
     settings.BASE_DIR,
     "model",
-    "final_efficientnetb0.keras"
+    "final_efficientnetb0.tflite"
 )
 
-model = tf.keras.models.load_model(MODEL_PATH)
+interpreter = Interpreter(model_path=MODEL_PATH)
+interpreter.allocate_tensors()
+
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
 
 CLASS_NAMES = [
     "akiec",
@@ -21,35 +28,34 @@ CLASS_NAMES = [
     "vasc"
 ]
 
-print("EfficientNetB0 model loaded successfully!")
 
-from PIL import Image
-import numpy as np
+print("EfficientNetB0 LiteRT model loaded successfully!")
 
 
 def predict_image(image):
-    # Convert uploaded Django file into a Pillow image
     image = Image.open(image).convert("RGB")
-
-    # Resize image to the same size used during training
     image = image.resize((224, 224))
 
-    # Convert image to NumPy array
     image_array = np.array(image).astype("float32")
-
-    # Add batch dimension
     image_array = np.expand_dims(image_array, axis=0)
 
-    # Make prediction
-    predictions = model.predict(image_array, verbose=0)
+    interpreter.set_tensor(
+        input_details[0]["index"],
+        image_array
+    )
 
-    # Get the class with highest probability
+    interpreter.invoke()
+
+    predictions = interpreter.get_tensor(
+        output_details[0]["index"]
+    )
+
     predicted_index = np.argmax(predictions[0])
 
-    # Get class name
     predicted_class = CLASS_NAMES[predicted_index]
 
-    # Get confidence
-    confidence = float(predictions[0][predicted_index]) * 100
+    confidence = (
+        float(predictions[0][predicted_index]) * 100
+    )
 
     return predicted_class, confidence
