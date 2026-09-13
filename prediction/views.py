@@ -1,6 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from django.shortcuts import render
 
 from .model_loader import predict_image
 
@@ -31,3 +32,7 @@ def predict(request):
             {"error": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+def home(request):
+    return render(request, "index.html")

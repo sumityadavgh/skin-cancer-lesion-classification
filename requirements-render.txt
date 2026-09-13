@@ -5,3 +5,4 @@ gunicorn==26.2.0
 numpy
 Pillow
 ai-edge-litert==2.2.0
+whitenoise==6.12.0

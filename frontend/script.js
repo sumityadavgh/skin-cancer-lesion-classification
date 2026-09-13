@@ -82,7 +82,7 @@ predictButton.addEventListener("click", async function () {
 
         // Send image to Django API
         const response = await fetch(
-            "http://127.0.0.1:8000/api/predict/",
+            "/api/predict/",
             {
                 method: "POST",
                 body: formData
